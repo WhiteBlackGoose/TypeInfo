@@ -1,0 +1,19 @@
+﻿@page "/counter"
+
+<h1>Counter</h1>
+
+<input @bind=@Text/>
+
+<button @onclick="OutputInfo" value="System.String">Qacasd</button>
+
+<textarea style="width: 100%; height: 900px">
+    @Info
+</textarea>
+
+@code {
+    public string Info;
+    public string Text;
+
+    private void OutputInfo()
+        => Info = TypeInfoFetcher.GetInfoAboutType(Text);
+}
