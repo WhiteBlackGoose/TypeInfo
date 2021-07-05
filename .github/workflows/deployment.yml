@@ -30,6 +30,5 @@ jobs:
     - uses: JamesIves/github-pages-deploy-action@4.1.4
       name: gh-pages publish
       env:
-        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}  
-        BRANCH: gh-pages
-        FOLDER: ./TypeInfoApp/bin/release/net5.0/publish/wwwroot
+        branch: gh-pages
+        folder: ./TypeInfoApp/bin/release/net5.0/publish/wwwroot
