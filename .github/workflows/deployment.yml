@@ -29,6 +29,6 @@ jobs:
       
     - uses: JamesIves/github-pages-deploy-action@4.1.4
       name: gh-pages publish
-      env:
+      with:
         branch: gh-pages
         folder: ./TypeInfoApp/bin/release/net5.0/publish/wwwroot
