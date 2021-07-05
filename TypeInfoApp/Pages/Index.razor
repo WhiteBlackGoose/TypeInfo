@@ -1,7 +1,197 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
+<h1>Get info about type</h1>
 
-Welcome to your new app.
+<style>
 
-<SurveyPrompt Title="How is Blazor working for you?" />
+td {
+    padding: 10px;
+}
+
+th {
+    padding: 10px;
+}
+
+a.type-link {
+    color: #DD9966;
+}
+
+.all-info-column {
+    min-width: 100px;
+}
+
+.neat {
+    padding: 4px;
+    border: 1px solid gray;
+    border-radius: 4px;
+}
+
+.submit-button:active {
+    background-color: white;
+    
+}
+
+.submit-button {
+    cursor: pointer;
+}
+
+</style>
+
+<input class="neat input-box" @bind=@Text style="width: 300px"/>
+
+<button class="neat submit-button" @onclick="OutputInfo">Fetch</button>
+(use IL syntax for generic types, for example, <code>System.Collections.Generic.List`1</code>)
+
+@if (members.OfType<FieldInfo>() is var fields && fields.Any())
+{
+    <h2>Fields</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Visibility</th>
+                <th>Static?</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th class='all-info-column'></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var field in fields)
+            {
+                <tr>
+                    <td>@(field.GetVisibilityModifier())</td>
+                    <td>@(field.IsStatic ? "static" : "")</td>
+                    <td>
+                    <a class="type-link" @onclick="() => LoadType(field.FieldType)">
+                        @field.FieldType.ToString().CutString()
+                    </a>
+                    </td>
+                    <td>@field.Name.CutString()</td>
+                    <td>
+                        <details><summary>All info</summary>
+                            <textarea style="width: 400px; height: 400px">
+                                @TypeInfoFetcher.GetAllInfo(field)
+                            </textarea>
+                        </details>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (members.OfType<PropertyInfo>() is var props && props.Any())
+{
+    <h2>Properties</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Accessors</th>
+                <th>Type</th>
+                <th>Name</th>
+                <th class='all-info-column'></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var prop in props)
+            {
+                <tr>
+                    <td>
+                        @prop.GetAccessorsInfo()
+                    </td>
+                    <td>
+                    <a class="type-link" @onclick="() => LoadType(prop.PropertyType)">
+                        @prop.PropertyType.ToString().CutString()
+                    </a>
+                    </td>
+                    <td>@prop.Name.CutString()</td>
+                    <td>
+                        <details><summary>All info</summary>
+                            <textarea style="width: 400px; height: 400px">
+                                @TypeInfoFetcher.GetAllInfo(prop)
+                            </textarea>
+                        </details>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@if (members.OfType<MethodInfo>() is var methods && methods.Any())
+{
+    <h2>Methods</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Visibility</th>
+                <th>Static?</th>
+                <th>Return type</th>
+                <th>Name</th>
+                <th>Arguments</th>
+                <th class='all-info-column'></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach(var method in methods)
+            {
+                <tr>
+                    <td>
+                        @method.GetVisibilityModifier()
+                    </td>
+                    <td>
+                        @(method.IsStatic ? "static" : "")
+                    </td>
+                    <td>
+                        <a class="type-link" @onclick="() => LoadType(method.ReturnType)">
+                            @method.ReturnType.ToString().CutString()
+                        </a>
+                    </td>
+                    <td>@method.Name.CutString()</td>
+                    <td>
+                        @foreach (var (index, parameter) in method.GetParameters().Enumerate())
+                        {
+                            @(index is 0 ? "" : ", ")
+                            <a class="type-link" @onclick="() => LoadType(parameter.ParameterType)">
+                                @parameter.ParameterType.ToString().CutString()
+                            </a>
+
+                            @($" {parameter.Name}")
+                        }
+                    </td>
+                    <td>
+                        <details><summary>All info</summary>
+                            <textarea style="width: 400px; height: 400px">
+                                @TypeInfoFetcher.GetAllInfo(method)
+                            </textarea>
+                        </details>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+
+@using System.Reflection
+@using HonkSharp.Fluency
+@code {
+    
+
+    public string Info;
+    public string Text = "System.String";
+    public IEnumerable<MemberInfo> members = Enumerable.Empty<MemberInfo>();
+
+    private void OutputInfo()   
+        => members = TypeInfoFetcher.GetMembers(Text);
+
+    private void LoadType(Type type)
+        => type.ToString()
+            .Alias(out var typeName)
+            .Pipe(Type.GetType)
+            ?.Let(out Text, typeName)
+            .Pipe(_ => OutputInfo());
+}

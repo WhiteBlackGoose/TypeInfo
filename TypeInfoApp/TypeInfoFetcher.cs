@@ -1,4 +1,5 @@
 ﻿using HonkSharp.Fluency;
+using HonkSharp.Functional;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,14 @@ namespace TypeInfoApp
                 _ => "internal"
             };
 
+        public static string GetVisibilityModifier(this MethodInfo fi)
+            => (fi.IsPrivate, fi.IsPublic) switch
+            {
+                (true, _) => "private",
+                (_, true) => "public",
+                _ => "internal"
+            };
+
         public static string GetAccessorsInfo(this PropertyInfo pi)
             => (pi.GetMethod, pi.SetMethod) switch
             {
@@ -32,12 +41,28 @@ namespace TypeInfoApp
         public static string GetAllInfo<T>(T fi)
             => typeof(T)
                 .GetProperties(AnyMember)
-                .Select(p => $"{p.Name}: {p.GetValue(fi)}")
+                .Select(p => 
+                    p.Name 
+                    + ": "
+                    + p.Dangerous()
+                        .Try<Exception, string>(p => p.GetValue(fi)?.ToString() ?? "")
+                        .Switch(
+                            valid => valid,
+                            failure => $"Exception ocurred: {failure.Reason.Message}"
+                        )
+                )
                 .Pipe<IEnumerable<string>, string>("\n".Join);
 
         public static IEnumerable<MemberInfo> GetMembers(string name)
             => Type.GetType(name)?.GetMembers(AnyMember) ?? Enumerable.Empty<MemberInfo>();
 
 
+        const int MaxStringLength = 25;
+        public static string CutString(this string s)
+            => s switch
+            {
+                { Length: < MaxStringLength } shortEnough => shortEnough,
+                _ => $"{s[0..MaxStringLength]}\n{s[MaxStringLength..].CutString()}"
+            };
     }
 }
