@@ -27,8 +27,9 @@ jobs:
     - name: Add .nojekyll file
       run: touch ./TypeInfoApp/bin/release/net5.0/publish/wwwroot/.nojekyll
       
-    - uses: maxheld83/ghpages@master
+    - uses: JamesIves/github-pages-deploy-action@4.1.4
       name: gh-pages publish
       env:
         BUILD_DIR: ./TypeInfoApp/bin/release/net5.0/publish/wwwroot
+        BRANCH: gh-pages
         GH_PAT: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
