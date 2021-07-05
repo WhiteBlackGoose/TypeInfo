@@ -66,6 +66,7 @@ a.type-link {
     <table>
         <thead>
             <tr>
+                <th>Accessors</th>
                 <th>Type</th>
                 <th>Name</th>
                 <th></th>
@@ -75,6 +76,9 @@ a.type-link {
             @foreach(var prop in props)
             {
                 <tr>
+                    <td>
+                        @prop.GetAccessorsInfo()
+                    </td>
                     <td>
                     <a class="type-link" @onclick="() => LoadType(prop.PropertyType)">
                         @(prop.PropertyType)
@@ -104,7 +108,7 @@ a.type-link {
     public IEnumerable<MemberInfo> members = Enumerable.Empty<MemberInfo>();
 
     private void OutputInfo()   
-        => members = Type.GetType(Text)?.GetMembers(TypeInfoFetcher.AnyMember) ?? Enumerable.Empty<MemberInfo>();
+        => members = TypeInfoFetcher.GetMembers(Text);
 
     private void LoadType(Type type)
         => type.ToString()

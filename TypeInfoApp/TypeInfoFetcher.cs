@@ -20,11 +20,24 @@ namespace TypeInfoApp
                 _ => "internal"
             };
 
+        public static string GetAccessorsInfo(this PropertyInfo pi)
+            => (pi.GetMethod, pi.SetMethod) switch
+            {
+                (null, null) => "-",
+                (not null, null) => "get",
+                (null, not null) => "set",
+                (not null, not null) => "get/set"
+            };
+
         public static string GetAllInfo<T>(T fi)
             => typeof(T)
                 .GetProperties(AnyMember)
                 .Select(p => $"{p.Name}: {p.GetValue(fi)}")
                 .Pipe<IEnumerable<string>, string>("\n".Join);
-                
+
+        public static IEnumerable<MemberInfo> GetMembers(string name)
+            => Type.GetType(name)?.GetMembers(AnyMember) ?? Enumerable.Empty<MemberInfo>();
+
+
     }
 }
