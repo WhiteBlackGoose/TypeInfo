@@ -11,10 +11,11 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     
-    - name: Setup .NET 5
+    - name: Setup .NET 6
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '5.0.x'
+        dotnet-version: '6.0.x'
+        include-prerelease: true
         
     - name: publish
       run: |
@@ -22,13 +23,13 @@ jobs:
         dotnet publish -c release
       
     - name: Change base-tag in index.html from / to the necessary
-      run: sed -i 's/<base href="\/" \/>/<base href="\/TypeInfo\/" \/>/g' ./TypeInfoApp/bin/release/net5.0/publish/wwwroot/index.html
+      run: sed -i 's/<base href="\/" \/>/<base href="\/TypeInfo\/" \/>/g' ./TypeInfoApp/bin/release/net6.0/publish/wwwroot/index.html
       
     - name: Add .nojekyll file
-      run: touch ./TypeInfoApp/bin/release/net5.0/publish/wwwroot/.nojekyll
+      run: touch ./TypeInfoApp/bin/release/net6.0/publish/wwwroot/.nojekyll
       
     - uses: JamesIves/github-pages-deploy-action@4.1.4
       name: gh-pages publish
       with:
         branch: gh-pages
-        folder: ./TypeInfoApp/bin/release/net5.0/publish/wwwroot
+        folder: ./TypeInfoApp/bin/release/net6.0/publish/wwwroot
