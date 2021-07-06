@@ -41,16 +41,34 @@ a.type-link {
 <button class="neat submit-button" @onclick="OutputInfo">Fetch</button>
 (use IL syntax for generic types, for example, <code>System.Collections.Generic.List`1</code>)
 
+
 @if (ErrorText is not "")
 {
     <div>
-        <textarea style="width: 100%; height: 300px;">
 @ErrorText
-        </textarea>
     </div>
 }
 
-@if (members.OfType<FieldInfo>() is var fields && fields.Any())
+
+@if (FoundTypes.Any())
+{
+    <div>
+        Multiple types found for the request:
+    </div>
+    <ul>
+        @foreach (var typeFound in FoundTypes)
+        {
+            <li>
+                <a class="type-link" @onclick="() => LoadType(typeFound.AssemblyQualifiedName)">
+                    @typeFound.ToString().CutString()
+                </a>
+            </li>
+        }
+    </ul>
+}
+
+
+@if (Members.OfType<FieldInfo>() is var fields && fields.Any())
 {
     <h2>Fields</h2>
     <table>
@@ -88,7 +106,7 @@ a.type-link {
     </table>
 }
 
-@if (members.OfType<PropertyInfo>() is var props && props.Any())
+@if (Members.OfType<PropertyInfo>() is var props && props.Any())
 {
     <h2>Properties</h2>
     <table>
@@ -128,7 +146,7 @@ a.type-link {
 
 
 
-@if (members.OfType<MethodInfo>() is var methods && methods.Any())
+@if (Members.OfType<MethodInfo>() is var methods && methods.Any())
 {
     <h2>Methods</h2>
     <table>
@@ -191,12 +209,21 @@ a.type-link {
 
     public string Info;
     public string Text = "System.String";
-    public IEnumerable<MemberInfo> members = Enumerable.Empty<MemberInfo>();
+    public IEnumerable<MemberInfo> Members = Enumerable.Empty<MemberInfo>();
+    public IEnumerable<Type> FoundTypes = Enumerable.Empty<Type>();
+
     public string ErrorText = "";
+
+    private void Clear()
+    {
+        ErrorText = "";
+        Members = Enumerable.Empty<MemberInfo>();
+        FoundTypes = Enumerable.Empty<Type>();
+    }
 
     private void OutputInfo()   
     {
-        members = Enumerable.Empty<MemberInfo>();
+        Clear();
         var foundTypes = TypeInfoFetcher.GetAllTypesRoughly(Text);
         if (!foundTypes.Any())
         {
@@ -206,18 +233,21 @@ a.type-link {
 
         if (!foundTypes.IsSingleElement(out var type))
         {
-            ErrorText = $"Multiple types were found:\n{"\n".Join(foundTypes.Select(c => $"{c.AssemblyQualifiedName}"))}";
+            FoundTypes = foundTypes;
             return;
         }
 
-        ErrorText = $"";
         LoadType(type.AssemblyQualifiedName);
+        
     }
 
     private void LoadType(string fullname)
-        => TypeInfoFetcher
+    { 
+        Clear();
+        TypeInfoFetcher
             .GetMembers(fullname)
-            ?.Pipe(newMembers => members = newMembers)
+            ?.Pipe(newMembers => Members = newMembers)
             .Discard()
             .Pipe(_ => Text = fullname);
+    }
 }
