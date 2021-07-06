@@ -301,7 +301,7 @@ type name, it will find all types you may want to inspect.
         Clear();
         AllTypeInfo = TypeInfoFetcher.GetAllInfo(type);
         CurrentType = type;
-        Members = type.GetMembers();
+        Members = type.GetMembers(TypeInfoFetcher.AnyMember);
         Text = fullname;
     }
 }
