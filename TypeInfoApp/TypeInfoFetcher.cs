@@ -53,9 +53,32 @@ namespace TypeInfoApp
                 )
                 .Pipe<IEnumerable<string>, string>("\n".Join);
 
-        public static IEnumerable<MemberInfo> GetMembers(string name)
-            => Type.GetType(name)?.GetMembers(AnyMember) ?? Enumerable.Empty<MemberInfo>();
+        private static readonly Type[] allTypes =
+            AppDomain.CurrentDomain
+            .GetAssemblies()
+            .Select(c => c.GetTypes())
+            .SelectMany(c => c)
+            .ToArray();
 
+        public static IEnumerable<Type> GetAllTypesRoughly(string name)
+            => Type.GetType(name) is { } foundUnique
+                ? new [] { foundUnique }
+                : allTypes.Where(t => t.AssemblyQualifiedName.Contains(name, StringComparison.OrdinalIgnoreCase));
+
+        public static IEnumerable<MemberInfo>? GetMembers(string name)
+            => Type.GetType(name)?.GetMembers(AnyMember);
+
+        public static bool IsSingleElement<T>(this IEnumerable<T> collection, out T res)
+        {
+            var enumerator = collection.GetEnumerator();
+            if (enumerator.MoveNext())
+            {
+                res = enumerator.Current;
+                return enumerator.MoveNext() == false; // it should be false after the first iter
+            }
+            res = default!;
+            return false;
+        }
 
         const int MaxStringLength = 25;
         public static string CutString(this string s)
