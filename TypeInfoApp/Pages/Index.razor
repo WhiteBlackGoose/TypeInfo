@@ -13,7 +13,7 @@ th {
 }
 
 a.type-link {
-    color: #DD9966;
+    color: #DD55AA;
     cursor: pointer;
 }
 
@@ -41,6 +41,11 @@ a.type-link {
 </style>
 
 <p>
+This is a Blazor WASM powered app which allows you to inspect an arbitrary type from BCL and
+a few other assemblies. <a href="https://github.com/WhiteBlackGoose/TypeInfo">Github</a> of the project.
+</p>
+
+<p>
 Input a type or part of the type's name you're looking for. If you don't know the whole
 type name, it will find all types you may want to inspect.
 </p>
@@ -55,6 +60,26 @@ type name, it will find all types you may want to inspect.
 {
     <p>
 @ErrorText
+    </p>
+}
+
+@if (CurrentType is { } validType)
+{
+    <p>
+        <b>Full name:</b> <code>@validType.AssemblyQualifiedName</code>
+    </p>
+    <p>
+        @if (validType.BaseType is { } baseType)
+        {
+            <b>Base type:</b>
+            <a class="type-link" @onclick="() => LoadType(baseType.AssemblyQualifiedName)">
+                @baseType.ToString().CutString(160)
+            </a>
+        }
+        else
+        {
+            <b>No base type</b>
+        }
     </p>
 }
 
@@ -209,6 +234,21 @@ type name, it will find all types you may want to inspect.
     </table>
 }
 
+@if (AllTypeInfo is not "")
+{
+    <br>
+    <details>
+        <summary>
+            <b>
+            All info
+            </b>
+        </summary>
+        <textarea style="width: 100%; height: 600px">
+            @AllTypeInfo
+        </textarea>
+    </details>
+    <br>
+}
 
 
 @using System.Reflection
@@ -216,10 +256,12 @@ type name, it will find all types you may want to inspect.
 @code {
     
 
-    public string Info;
     public string Text = "System.String";
     public IEnumerable<MemberInfo> Members = Enumerable.Empty<MemberInfo>();
     public IEnumerable<Type> FoundTypes = Enumerable.Empty<Type>();
+    public string AllTypeInfo = "";
+
+    public Type? CurrentType;
 
     public string ErrorText = "";
 
@@ -228,11 +270,14 @@ type name, it will find all types you may want to inspect.
         ErrorText = "";
         Members = Enumerable.Empty<MemberInfo>();
         FoundTypes = Enumerable.Empty<Type>();
+        AllTypeInfo = "";
+        CurrentType = null;
     }
 
     private void OutputInfo()   
     {
         Clear();
+
         var foundTypes = TypeInfoFetcher.GetAllTypesRoughly(Text);
         if (!foundTypes.Any())
         {
@@ -247,16 +292,16 @@ type name, it will find all types you may want to inspect.
         }
 
         LoadType(type.AssemblyQualifiedName);
-        
     }
 
     private void LoadType(string fullname)
     { 
+        if (Type.GetType(fullname) is not { } type)
+            return;
         Clear();
-        TypeInfoFetcher
-            .GetMembers(fullname)
-            ?.Pipe(newMembers => Members = newMembers)
-            .Discard()
-            .Pipe(_ => Text = fullname);
+        AllTypeInfo = TypeInfoFetcher.GetAllInfo(type);
+        CurrentType = type;
+        Members = type.GetMembers();
+        Text = fullname;
     }
 }

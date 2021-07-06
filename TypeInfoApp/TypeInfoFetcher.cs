@@ -82,10 +82,14 @@ namespace TypeInfoApp
 
         const int MaxStringLength = 25;
         public static string CutString(this string s, int maxLength = MaxStringLength)
-            => s switch
-            {
-                var shortEnough when s.Length < maxLength => shortEnough,
-                _ => $"{s[0..maxLength]}\n{s[maxLength..].CutString()}"
-            };
+        {
+            if (s.Length <= maxLength)
+                return s;
+            if (s.IndexOf('.') is var dotIndex and not -1)
+                return CutString(s[..dotIndex], maxLength) + "\n." + CutString(s[(dotIndex + 1)..], maxLength);
+            if (s.IndexOf('[') is var bracketIndex and not -1)
+                return CutString(s[..bracketIndex], maxLength) + "\n[" + CutString(s[(bracketIndex + 1)..], maxLength);
+            return s[..maxLength] + "\n" + CutString(s[..maxLength], maxLength);
+        }
     }
 }
