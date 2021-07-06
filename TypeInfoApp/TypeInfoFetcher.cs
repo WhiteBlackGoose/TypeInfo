@@ -81,11 +81,11 @@ namespace TypeInfoApp
         }
 
         const int MaxStringLength = 25;
-        public static string CutString(this string s)
+        public static string CutString(this string s, int maxLength = MaxStringLength)
             => s switch
             {
-                { Length: < MaxStringLength } shortEnough => shortEnough,
-                _ => $"{s[0..MaxStringLength]}\n{s[MaxStringLength..].CutString()}"
+                var shortEnough when s.Length < maxLength => shortEnough,
+                _ => $"{s[0..maxLength]}\n{s[maxLength..].CutString()}"
             };
     }
 }

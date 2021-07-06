@@ -1,6 +1,6 @@
 ﻿@page "/"
 
-<h1>Get info about type</h1>
+<h1>Type inspector</h1>
 
 <style>
 
@@ -14,6 +14,7 @@ th {
 
 a.type-link {
     color: #DD9966;
+    cursor: pointer;
 }
 
 .all-info-column {
@@ -21,9 +22,10 @@ a.type-link {
 }
 
 .neat {
-    padding: 4px;
+    padding: 6px;
     border: 1px solid gray;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-size: 14pt;
 }
 
 .submit-button:active {
@@ -32,35 +34,42 @@ a.type-link {
 
 .submit-button {
     cursor: pointer;
+    padding-left: 10px;
+    padding-right: 10px;
 }
 
 </style>
 
-<input class="neat input-box" @bind=@Text style="width: 600px"/>
+<p>
+Input a type or part of the type's name you're looking for. If you don't know the whole
+type name, it will find all types you may want to inspect.
+</p>
 
-<button class="neat submit-button" @onclick="OutputInfo">Fetch</button>
-(use IL syntax for generic types, for example, <code>System.Collections.Generic.List`1</code>)
+<input class="neat input-box" @bind=@Text style="width: 70%" @onkeypress="args => { if (args.Key[0] is 'E' /*enter*/ ) OutputInfo(); }" />
+
+<button class="neat submit-button" @onclick="OutputInfo">Search</button>
+
 
 
 @if (ErrorText is not "")
 {
-    <div>
+    <p>
 @ErrorText
-    </div>
+    </p>
 }
 
 
 @if (FoundTypes.Any())
 {
-    <div>
+    <p>
         Multiple types found for the request:
-    </div>
+    </p>
     <ul>
         @foreach (var typeFound in FoundTypes)
         {
             <li>
                 <a class="type-link" @onclick="() => LoadType(typeFound.AssemblyQualifiedName)">
-                    @typeFound.ToString().CutString()
+                    @typeFound.ToString().CutString(120)
                 </a>
             </li>
         }
